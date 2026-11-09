@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>聚合支付 · 交互原型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #F4F5F9;
+    --card: #FFFFFF;
+    --sub: #F7F8FC;
+    --t1: #14161A;
+    --t2: #6B7280;
+    --t3: #9CA3AF;
+    --wechat: #07C160;
+    --alipay: #1677FF;
+  }
+  body {
+    font-family: 'HarmonyOS Sans SC', 'HarmonyOS Sans', -apple-system, 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    background: radial-gradient(1200px 700px at 50% -10%, #E7EAF3 0%, #DFE3EE 45%, #D6DAE7 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+
+  .stage-note { width: 300px; color: #2A2E3A; }
+  .stage-note h1 { font-size: 24px; letter-spacing: -0.4px; margin-bottom: 10px; }
+  .stage-note p { font-size: 13px; line-height: 1.85; color: #5A6070; margin-bottom: 14px; }
+  .stage-note .k { display: inline-block; background: rgba(90,90,247,.1); color: #4A4AD8; border-radius: 6px; padding: 1px 6px; font-size: 11.5px; margin: 0 2px; }
+  .stage-note ul { list-style: none; font-size: 12.5px; line-height: 2; color: #5A6070; }
+  .stage-note li::before { content: '·'; margin-right: 8px; color: #A0A6B5; font-weight: 700; }
+
+  /* ---------- phone ---------- */
+  .phone {
+    position: relative;
+    width: 390px; height: 844px;
+    border-radius: 46px;
+    background: var(--bg);
+    overflow: hidden;
+    box-shadow: 0 2px 3px rgba(20,30,60,.06), 0 30px 70px -18px rgba(24,34,70,.38), 0 0 0 11px #1A1D24, 0 0 0 12.5px #33384A;
+    flex: 0 0 auto;
+  }
+
+  .glow {
+    position: absolute; width: 420px; height: 420px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(7,193,96,.16) 0%, rgba(7,193,96,0) 68%);
+    left: 46%; top: -170px; pointer-events: none;
+  }
+
+  .screen { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .statusbar {
+    height: 54px; padding: 0 26px 0 30px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    font-size: 14px; font-weight: 600; color: var(--t1);
+    padding-bottom: 6px;
+  }
+  .statusbar .icons { display: flex; gap: 5px; align-items: center; }
+
+  .content { padding: 8px 20px 34px; position: relative; }
+
+  /* header */
+  .appbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+  .appbar h2 { font-size: 27px; font-weight: 700; letter-spacing: -0.6px; color: var(--t1); }
+  .appbar .sub { font-size: 12px; color: var(--t2); margin-top: 5px; }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 21px; background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(24,34,70,.06);
+    cursor: pointer; transition: transform .16s ease, background .16s ease;
+  }
+  .icon-btn:active { transform: scale(.93); background: #F0F1F6; }
+  .icon-btn svg { width: 20px; height: 20px; fill: var(--t1); }
+
+  /* deck */
+  .deck {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .deck::-webkit-scrollbar { display: none; }
+  .slide { flex: 0 0 100%; scroll-snap-align: center; padding-bottom: 20px; }
+  .card {
+    height: 298px; border-radius: 30px; position: relative; overflow: hidden;
+    padding: 22px; display: flex; flex-direction: column;
+    color: #fff; cursor: pointer;
+    transition: transform .18s cubic-bezier(.3,.9,.4,1);
+  }
+  .card:active { transform: scale(.972); }
+  .card.wechat { background: linear-gradient(145deg, #12D06C 0%, #039B4D 100%); box-shadow: 0 16px 34px -14px rgba(4,155,77,.7), 0 2px 6px rgba(7,60,30,.08); }
+  .card.alipay { background: linear-gradient(145deg, #3D8BFF 0%, #0A56CC 100%); box-shadow: 0 16px 34px -14px rgba(10,86,204,.7), 0 2px 6px rgba(6,30,80,.08); }
+  .card::after {
+    content: ''; position: absolute; width: 230px; height: 230px; border-radius: 50%;
+    right: -72px; top: -78px; background: rgba(255,255,255,.13);
+  }
+  .card-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 2; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .logo { width: 38px; height: 38px; border-radius: 19px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; }
+  .brand .logo svg { width: 22px; height: 22px; fill: #fff; }
+  .brand .name { font-size: 19px; font-weight: 700; line-height: 1.2; }
+  .brand .en { font-size: 10px; letter-spacing: 1.2px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,.2); }
+
+  .card-mid { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; }
+  .paycode {
+    width: 164px; height: 86px; background: #fff; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 12px 24px rgba(0,0,0,.18);
+  }
+  .bars { display: flex; gap: 3px; align-items: flex-end; height: 26px; }
+  .bars i { display: block; width: 2px; height: 26px; border-radius: 1px; }
+  .paycode span { font-size: 11px; letter-spacing: 2px; color: rgba(0,0,0,.54); margin-top: 7px; }
+
+  .card-bottom { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; position: relative; z-index: 2; }
+  .card-bottom svg { width: 14px; height: 14px; fill: #fff; }
+
+  /* dots */
+  .dots { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; }
+  .dot { width: 6px; height: 6px; border-radius: 3px; background: #C9CDD6; transition: all .28s cubic-bezier(.3,.9,.4,1); cursor: pointer; }
+  .dot.on { width: 20px; background: var(--t1); }
+
+  /* quick */
+  .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }
+  .q {
+    background: var(--card); border-radius: 20px; padding: 17px 0 15px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 2px 12px rgba(24,34,70,.05);
+    cursor: pointer; transition: transform .15s ease;
+  }
+  .q:active { transform: scale(.95); }
+  .q .qi { width: 42px; height: 42px; border-radius: 21px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .q .qi svg { width: 21px; height: 21px; }
+  .q span { font-size: 13px; font-weight: 500; color: var(--t1); }
+
+  .tip {
+    display: flex; gap: 10px; margin-top: 14px; padding: 14px;
+    background: var(--sub); border-radius: 16px; align-items: flex-start;
+  }
+  .tip svg { width: 16px; height: 16px; fill: var(--t3); flex: 0 0 16px; margin-top: 1px; }
+  .tip p { font-size: 11.5px; line-height: 1.6; color: var(--t3); }
+
+  /* overlay pages */
+  .overlay {
+    position: absolute; inset: 0; background: var(--bg); z-index: 20;
+    transform: translateX(100%); transition: transform .32s cubic-bezier(.32,.72,0,1);
+    display: flex; flex-direction: column;
+  }
+  .overlay.show { transform: translateX(0); }
+  .overlay .head { padding: 60px 20px 20px; display: flex; align-items: center; gap: 12px; }
+  .overlay .head h3 { font-size: 20px; font-weight: 700; color: var(--t1); }
+  .overlay .body { flex: 1; overflow-y: auto; padding: 0 20px 30px; }
+
+  .group-label { font-size: 12px; color: var(--t3); letter-spacing: .6px; margin: 8px 0 8px 4px; }
+  .panel { background: var(--card); border-radius: 20px; overflow: hidden; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; transition: background .16s; }
+  .opt:active { background: var(--sub); }
+  .opt .oi { width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+  .opt .oi svg { width: 20px; height: 20px; }
+  .opt .txt { flex: 1; }
+  .opt .txt .n { font-size: 15px; font-weight: 500; color: var(--t1); }
+  .opt .txt .d { font-size: 11px; color: var(--t3); margin-top: 2px; }
+  .opt .ck { width: 18px; height: 18px; opacity: 0; transition: opacity .2s; }
+  .opt.on .ck { opacity: 1; }
+
+  .row { display: flex; align-items: center; padding: 13px 14px; gap: 12px; }
+  .row .txt { flex: 1; }
+  .row .txt .n { font-size: 15px; font-weight: 500; color: var(--t1); }
+  .row .txt .d { font-size: 11px; color: var(--t3); margin-top: 2px; }
+  .switch { width: 46px; height: 27px; border-radius: 14px; background: #D5D8E0; position: relative; transition: background .22s; cursor: pointer; }
+  .switch.on { background: var(--wechat); }
+  .switch::after { content: ''; position: absolute; width: 23px; height: 23px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: left .22s cubic-bezier(.3,.9,.4,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch.on::after { left: 21px; }
+
+  .about { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .about .line { display: flex; gap: 8px; font-size: 12px; color: var(--t2); line-height: 1.55; }
+  .about .line b { width: 44px; flex: 0 0 44px; font-weight: 500; }
+  .about .note { font-size: 11px; color: var(--t3); line-height: 1.6; }
+  .ver { text-align: center; font-size: 11px; color: var(--t3); margin: 26px 0 10px; }
+
+  /* guide sheet */
+  .sheetwrap { position: absolute; inset: 0; z-index: 30; display: none; }
+  .sheetwrap.show { display: block; }
+  .mask { position: absolute; inset: 0; background: rgba(0,0,0,.48); animation: fade .24s ease; }
+  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; background: var(--card);
+    border-radius: 28px 28px 0 0; padding: 16px 24px 28px;
+    animation: up .3s cubic-bezier(.32,.72,0,1); 
+  }
+  @keyframes up { from { transform: translateY(340px) } to { transform: translateY(0) } }
+  .grabber { width: 38px; height: 4px; border-radius: 2px; background: rgba(0,0,0,.15); margin: 0 auto 20px; }
+  .sheet h4 { font-size: 19px; font-weight: 700; color: var(--t1); display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sheet h4 .hl { width: 40px; height: 40px; border-radius: 20px; background: #E8F9F0; display: flex; align-items: center; justify-content: center; }
+  .sheet h4 .hl svg { width: 22px; height: 22px; fill: var(--wechat); }
+  .sheet p.lead { font-size: 13.5px; line-height: 1.65; color: var(--t2); }
+  .steps { background: var(--sub); border-radius: 16px; padding: 14px; margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .step { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--t1); }
+  .step b { width: 20px; height: 20px; border-radius: 10px; background: var(--wechat); color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: 0 0 20px; }
+  .sheet .foot { font-size: 11.5px; color: var(--t3); margin-top: 12px; }
+  .btn-primary {
+    margin-top: 20px; width: 100%; height: 46px; border: 0; border-radius: 23px;
+    background: var(--t1); color: #fff; font-size: 15px; font-weight: 500;
+    font-family: inherit; cursor: pointer; transition: opacity .16s;
+  }
+  .btn-primary:active { opacity: .82; }
+
+  /* toast */
+  .launchmask {
+    position: absolute; inset: 0; background: var(--bg); z-index: 45;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    opacity: 0; pointer-events: none; transition: opacity .12s ease;
+  }
+  .launchmask.show { opacity: 1; pointer-events: auto; }
+  .launchmask .spin {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid rgba(0,0,0,.08); border-top-color: var(--spin, #07C160);
+    animation: spin .8s linear infinite;
+  }
+  .launchmask span { font-size: 14px; color: var(--t2); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 14px);
+    background: rgba(20,22,26,.9); color: #fff; font-size: 13px;
+    padding: 10px 18px; border-radius: 20px; opacity: 0; pointer-events: none;
+    transition: all .26s ease; z-index: 40; max-width: 80%; text-align: center; line-height: 1.5;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* scan result */
+  .result-hero { background: var(--card); border-radius: 24px; padding: 30px 20px 28px; display: flex; flex-direction: column; align-items: center; }
+  .result-hero .badge-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .result-hero .badge-icon svg { width: 30px; height: 30px; }
+  .result-hero h4 { font-size: 19px; font-weight: 700; margin: 14px 0 6px; color: var(--t1); }
+  .result-hero p { font-size: 12.5px; line-height: 1.55; color: var(--t2); text-align: center; padding: 0 12px; }
+  .raw { background: var(--sub); border-radius: 18px; padding: 16px; margin-top: 14px; }
+  .raw .lbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--t3); margin-bottom: 8px; }
+  .raw .val { font-size: 13px; line-height: 1.55; color: var(--t1); word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="stage-note">
+  <h1>聚合支付</h1>
+  <p>鸿蒙 7（API 26）原生应用交互原型。左右滑动切换渠道，点击卡片模拟拉起付款码。</p>
+  <ul>
+    <li>点击圆点 / 滑动卡片切换渠道</li>
+    <li>点右上角齿轮进入设置</li>
+    <li>点「扫一扫」查看扫码结果处理</li>
+    <li>点微信 / 支付宝卡片直接直达</li>
+  </ul>
+  <p style="margin-top:18px;font-size:12px;color:#7A8090;">真实工程位于 <span class="k">D:\Download\AggPay</span>，已通过 hvigor 编译产出 HAP。</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="glow"></div>
+
+  <!-- ============ 首页 ============ -->
+  <div class="screen" id="home">
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <span class="icons">
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="#14161A"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="#14161A"><path d="M8 10.4 5.9 8.3a3 3 0 0 1 4.2 0L8 10.4Zm-3.5-3.5L2.4 4.8a8 8 0 0 1 11.2 0l-2.1 2.1a5 5 0 0 0-7 0Z"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="#14161A" opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="1.8" fill="#14161A"/><path d="M22 4v4a2.2 2.2 0 0 0 0-4Z" fill="#14161A" opacity=".4"/></svg>
+      </span>
+    </div>
+
+    <div class="content">
+      <div class="appbar">
+        <div>
+          <h2>聚合支付</h2>
+          <div class="sub">一步直达，不用再翻应用</div>
+        </div>
+        <div class="icon-btn" onclick="openSettings()">
+          <svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.48.48 0 0 0-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58ZM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2Z"/></svg>
+        </div>
+      </div>
+
+      <div class="deck" id="deck">
+        <!-- 微信 -->
+        <div class="slide">
+          <div class="card wechat" onclick="pay('wechat')">
+            <div class="card-top">
+              <div class="brand">
+                <div class="logo"><svg viewBox="0 0 24 24"><path d="M9.4 3.2C5.3 3.2 2 6 2 9.4c0 1.9 1.1 3.7 2.9 4.9l-.8 2.4 2.8-1.4c.8.2 1.7.4 2.5.4h.6a5.6 5.6 0 0 1-.2-1.5c0-3.2 3.1-5.8 6.9-5.8h.7C16.6 5.2 13.3 3.2 9.4 3.2Zm-2.6 4.2a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm5.1 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z"/><path d="M22 14.1c0-2.9-2.8-5.2-6.3-5.2s-6.3 2.3-6.3 5.2 2.8 5.2 6.3 5.2c.7 0 1.4-.1 2.1-.3l2.2 1.1-.6-1.9c1.6-1 2.6-2.5 2.6-4.1Zm-8.4-1.6a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Zm4.2 0a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Z"/></svg></div>
+                <div>
+                  <div class="name">微信</div>
+                  <div class="en">WECHAT PAY</div>
+                </div>
+              </div>
+              <div class="badge" id="badge-w">默认</div>
+            </div>
+            <div class="card-mid">
+              <div class="paycode">
+                <div class="bars" data-color="#07C160"></div>
+                <span>付款码</span>
+              </div>
+            </div>
+            <div class="card-bottom">
+              出示付款码
+              <svg viewBox="0 0 24 24"><path d="M9 5.6 15.4 12 9 18.4 7.2 16.6 11.8 12 7.2 7.4Z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 支付宝 -->
+        <div class="slide">
+          <div class="card alipay" onclick="pay('alipay')">
+            <div class="card-top">
+              <div class="brand">
+                <div class="logo"><svg viewBox="0 0 24 24"><path fill="#fff" fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4 3.6 5.2h-2.2v2h2.6v1.5h-2.6v3.3h-2.8v-3.3H8v-1.5h2.6v-2H8.4l3.6-5.2Z"/></svg></div>
+                <div>
+                  <div class="name">支付宝</div>
+                  <div class="en">ALIPAY</div>
+                </div>
+              </div>
+              <div class="badge" id="badge-a" style="visibility:hidden">默认</div>
+            </div>
+            <div class="card-mid">
+              <div class="paycode">
+                <div class="bars" data-color="#1677FF"></div>
+                <span>付款码</span>
+              </div>
+            </div>
+            <div class="card-bottom">
+              出示付款码
+              <svg viewBox="0 0 24 24"><path d="M9 5.6 15.4 12 9 18.4 7.2 16.6 11.8 12 7.2 7.4Z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dots">
+        <div class="dot on" onclick="goCard(0)"></div>
+        <div class="dot" onclick="goCard(1)"></div>
+      </div>
+
+      <div class="quick">
+        <div class="q" onclick="openScan()">
+          <div class="qi" style="background:#EEEEFE"><svg viewBox="0 0 24 24" fill="#5B5BF7"><rect x="3" y="3" width="7" height="2.2" rx="1.1"/><rect x="3" y="3" width="2.2" height="7" rx="1.1"/><rect x="14" y="3" width="7" height="2.2" rx="1.1"/><rect x="18.8" y="3" width="2.2" height="7" rx="1.1"/><rect x="3" y="18.8" width="7" height="2.2" rx="1.1"/><rect x="3" y="14" width="2.2" height="7" rx="1.1"/><rect x="14" y="18.8" width="7" height="2.2" rx="1.1"/><rect x="18.8" y="14" width="2.2" height="7" rx="1.1"/><rect x="3" y="10.9" width="18" height="2.2" rx="1.1"/></svg></div>
+          <span>扫一扫</span>
+        </div>
+        <div class="q" onclick="toast('正在调起收款码')">
+          <div class="qi" style="background:#E8F9F0"><svg viewBox="0 0 24 24" fill="#07C160"><path fill-rule="evenodd" d="M5 3h14a2.5 2.5 0 0 1 2.5 2.5v13A2.5 2.5 0 0 1 19 21H5a2.5 2.5 0 0 1-2.5-2.5v-13A2.5 2.5 0 0 1 5 3Zm0 2.2a.3.3 0 0 0-.3.3v13a.3.3 0 0 0 .3.3h14a.3.3 0 0 0 .3-.3v-13a.3.3 0 0 0-.3-.3H5Z"/><path d="M12 5.6a1.2 1.2 0 0 1 1.2 1.2v6.4l2-2a1.2 1.2 0 0 1 1.7 1.7l-4 4a1.2 1.2 0 0 1-1.7 0l-4-4a1.2 1.2 0 0 1 1.7-1.7l2 2V6.8A1.2 1.2 0 0 1 12 5.6Z"/></svg></div>
+          <span>收款码</span>
+        </div>
+        <div class="q" onclick="toast('设置 → 服务卡片 → 聚合支付')">
+          <div class="qi" style="background:#FEF4E6"><svg viewBox="0 0 24 24" fill="#F59E0B"><rect x="3" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="3" y="12.6" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="12.6" width="8.4" height="8.4" rx="2.4"/></svg></div>
+          <span>桌面卡片</span>
+        </div>
+      </div>
+
+      <div class="tip">
+        <svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.6a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-2.8 0v-6A1.4 1.4 0 0 1 12 6.6Zm0 10.2a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z"/></svg>
+        <p>左右滑动切换渠道，长按卡片设为默认；桌面长按应用图标可直接进入付款码。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 设置页 ============ -->
+  <div class="overlay" id="settings">
+    <div class="head">
+      <div class="icon-btn" onclick="closeSettings()">
+        <svg viewBox="0 0 24 24"><path d="M15 5.6 8.6 12 15 18.4 16.8 16.6 12.2 12 16.8 7.4Z"/></svg>
+      </div>
+      <h3>设置</h3>
+    </div>
+    <div class="body">
+      <div class="group-label">默认支付方式</div>
+      <div class="panel" style="padding:6px">
+        <div class="opt on" id="opt-wechat" onclick="setDefault('wechat')">
+          <div class="oi" style="background:#E8F9F0"><svg viewBox="0 0 24 24" fill="#07C160"><path d="M9.4 3.2C5.3 3.2 2 6 2 9.4c0 1.9 1.1 3.7 2.9 4.9l-.8 2.4 2.8-1.4c.8.2 1.7.4 2.5.4h.6a5.6 5.6 0 0 1-.2-1.5c0-3.2 3.1-5.8 6.9-5.8h.7C16.6 5.2 13.3 3.2 9.4 3.2Zm-2.6 4.2a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm5.1 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z"/><path d="M22 14.1c0-2.9-2.8-5.2-6.3-5.2s-6.3 2.3-6.3 5.2 2.8 5.2 6.3 5.2c.7 0 1.4-.1 2.1-.3l2.2 1.1-.6-1.9c1.6-1 2.6-2.5 2.6-4.1Zm-8.4-1.6a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Zm4.2 0a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Z"/></svg></div>
+          <div class="txt"><div class="n">微信</div><div class="d">付款码 / 收款码 / 扫一扫 直达</div></div>
+          <svg class="ck" viewBox="0 0 24 24" fill="#07C160"><path d="M9.6 16.3 5.3 12 3.9 13.4 9.6 19.1 20.4 8.3 19 6.9Z"/></svg>
+        </div>
+        <div class="opt" id="opt-alipay" onclick="setDefault('alipay')">
+          <div class="oi" style="background:#E7F0FF"><svg viewBox="0 0 24 24" fill="#1677FF"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4.4 3.6 5.2h-2.2v2h2.6v1.5h-2.6v3.3h-2.8v-3.3H8v-1.5h2.6v-2H8.4l3.6-5.2Z"/></svg></div>
+          <div class="txt"><div class="n">支付宝</div><div class="d">支持直达付款码</div></div>
+          <svg class="ck" viewBox="0 0 24 24" fill="#1677FF"><path d="M9.6 16.3 5.3 12 3.9 13.4 9.6 19.1 20.4 8.3 19 6.9Z"/></svg>
+        </div>
+      </div>
+
+      <div class="group-label" style="margin-top:22px">交互</div>
+      <div class="panel">
+        <div class="row">
+          <div class="txt"><div class="n">触感反馈</div><div class="d">点击、切换渠道时轻微振动</div></div>
+          <div class="switch on" id="haptic" onclick="toggleHaptic()"></div>
+        </div>
+      </div>
+
+      <div class="group-label" style="margin-top:22px">更快一步</div>
+      <div class="panel" style="padding:6px">
+        <div class="opt" onclick="openCardGuide()" style="cursor:pointer">
+          <div class="oi" style="background:#E8F9F0"><svg viewBox="0 0 24 24" fill="#07C160"><rect x="3" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="3" y="12.6" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="12.6" width="8.4" height="8.4" rx="2.4"/></svg></div>
+          <div class="txt"><div class="n">直达失效时的备用方案</div><div class="d">用微信自带图标，一样一点出码</div></div>
+          <svg viewBox="0 0 24 24" fill="#8A8F9C" style="width:14px;height:14px;flex:0 0 14px"><path d="M9 5.6 15.4 12 9 18.4 7.2 16.6 11.8 12 7.2 7.4Z"/></svg>
+        </div>
+      </div>
+
+      <div class="group-label" style="margin-top:22px">关于直达能力</div>
+      <div class="panel about">
+        <div class="line"><b style="color:#1677FF">支付宝</b><span>付款码 / 扫一扫 / 收款码 均可直达</span></div>
+        <div class="line"><b style="color:#07C160">微信</b><span>收付款 / 扫一扫 均可直达；收款码进页面后点一次「二维码收款」</span></div>
+        <div class="note">以上跳转均通过系统深链完成，聚合支付不读取、不存储任何支付信息。</div>
+      </div>
+
+      <div class="ver">聚合支付 for HarmonyOS · v1.0.0</div>
+    </div>
+  </div>
+
+  <!-- ============ 扫码结果 ============ -->
+  <div class="overlay" id="scan">
+    <div class="head">
+      <div class="icon-btn" onclick="closeScan()">
+        <svg viewBox="0 0 24 24"><path d="M15 5.6 8.6 12 15 18.4 16.8 16.6 12.2 12 16.8 7.4Z"/></svg>
+      </div>
+      <h3>扫码结果</h3>
+    </div>
+    <div class="body">
+      <div class="result-hero">
+        <div class="badge-icon" style="background:rgba(7,193,96,.1)"><svg viewBox="0 0 24 24" fill="#07C160"><path d="M9.4 3.2C5.3 3.2 2 6 2 9.4c0 1.9 1.1 3.7 2.9 4.9l-.8 2.4 2.8-1.4c.8.2 1.7.4 2.5.4h.6a5.6 5.6 0 0 1-.2-1.5c0-3.2 3.1-5.8 6.9-5.8h.7C16.6 5.2 13.3 3.2 9.4 3.2Zm-2.6 4.2a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm5.1 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z"/><path d="M22 14.1c0-2.9-2.8-5.2-6.3-5.2s-6.3 2.3-6.3 5.2 2.8 5.2 6.3 5.2c.7 0 1.4-.1 2.1-.3l2.2 1.1-.6-1.9c1.6-1 2.6-2.5 2.6-4.1Zm-8.4-1.6a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Zm4.2 0a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Z"/></svg></div>
+        <h4>微信收款码</h4>
+        <p>这是微信个人收款码，跳转微信后扫码即可付款</p>
+      </div>
+      <div class="raw">
+        <div class="lbl"><span>识别内容</span><span>长按可复制</span></div>
+        <div class="val">wxp://f2f0Xk3nQ8vB7pLmRtYw9aZs4dEfGh1jK</div>
+      </div>
+      <button class="btn-primary" style="background:#07C160" onclick="toast('正在调起微信')">用微信打开</button>
+      <button class="btn-primary" style="background:#fff;color:#14161A;margin-top:10px;box-shadow:0 2px 10px rgba(24,34,70,.06)" onclick="toast('已复制')">复制内容</button>
+      <button class="btn-primary" style="background:transparent;color:#6B7280;margin-top:6px" onclick="closeScan()">继续扫</button>
+    </div>
+  </div>
+
+  <!-- ============ 微信引导浮层 ============ -->
+  <div class="sheetwrap" id="guide">
+    <div class="mask" onclick="closeGuide()"></div>
+    <div class="sheet">
+      <div class="grabber"></div>
+      <h4>
+        <span class="hl"><svg viewBox="0 0 24 24"><path d="M9.4 3.2C5.3 3.2 2 6 2 9.4c0 1.9 1.1 3.7 2.9 4.9l-.8 2.4 2.8-1.4c.8.2 1.7.4 2.5.4h.6a5.6 5.6 0 0 1-.2-1.5c0-3.2 3.1-5.8 6.9-5.8h.7C16.6 5.2 13.3 3.2 9.4 3.2Zm-2.6 4.2a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Zm5.1 0a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z"/><path d="M22 14.1c0-2.9-2.8-5.2-6.3-5.2s-6.3 2.3-6.3 5.2 2.8 5.2 6.3 5.2c.7 0 1.4-.1 2.1-.3l2.2 1.1-.6-1.9c1.6-1 2.6-2.5 2.6-4.1Zm-8.4-1.6a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Zm4.2 0a.95.95 0 1 1 0-1.9.95.95 0 0 1 0 1.9Z"/></svg></span>
+        直达失效时的兜底路径
+      </h4>
+      <p class="lead">正常情况下点卡片会直接落到微信收付款页。若某次微信改版导致直达失效，按下面路径手动进入：</p>
+      <div class="steps">
+        <div class="step"><b>1</b>进入微信，点底部「我」</div>
+        <div class="step"><b>2</b>进入「服务」→「收付款」</div>
+      </div>
+      <div class="foot">提示：支付宝始终直达，不受影响。</div>
+      <button class="btn-primary" onclick="closeGuide()">知道了</button>
+    </div>
+  </div>
+
+  <div class="sheetwrap" id="cardguide">
+    <div class="mask" onclick="closeCardGuide()"></div>
+    <div class="sheet">
+      <div class="grabber"></div>
+      <h4>
+        <span class="hl"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="3" width="8.4" height="8.4" rx="2.4"/><rect x="3" y="12.6" width="8.4" height="8.4" rx="2.4"/><rect x="12.6" y="12.6" width="8.4" height="8.4" rx="2.4"/></svg></span>
+        微信也能一键出码
+      </h4>
+      <p class="lead">本应用已能直接跳到微信收付款页。若某次微信更新导致直达失效，可以用微信自己的入口兜底，效果一样。</p>
+      <div class="steps">
+        <div class="step"><b>1</b>长按桌面微信图标，点「服务卡片」</div>
+        <div class="step"><b>2</b>选择「收付款」样式，添加到桌面</div>
+        <div class="step"><b>3</b>以后点亮屏幕，点卡片直接出付款码</div>
+      </div>
+      <div class="foot">更短的方案：微信收付款页底部有「添加到桌面」，点一下生成直达图标。</div>
+      <button class="btn-primary" onclick="closeCardGuide()">知道了</button>
+    </div>
+  </div>
+
+  <div class="launchmask" id="launchmask"><div class="spin"></div><span id="launchtxt">正在调起</span></div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // 条形码纹理
+  const widths = [3,2,5,2,3,6,2,3,2,5,3,2,6,2,3,3,2,5,2,4];
+  document.querySelectorAll('.bars').forEach(box => {
+    const color = box.dataset.color;
+    widths.forEach((w, i) => {
+      const el = document.createElement('i');
+      el.style.width = w + 'px';
+      el.style.background = color;
+      el.style.height = (i % 3 === 0 ? 22 : i % 3 === 1 ? 18 : 14) + 'px';
+      box.appendChild(el);
+    });
+  });
+
+  // 时间
+  function tick() {
+    const d = new Date();
+    document.getElementById('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  tick(); setInterval(tick, 10000);
+
+  // 卡片滑动 → 圆点
+  const deck = document.getElementById('deck');
+  const dots = document.querySelectorAll('.dot');
+  deck.addEventListener('scroll', () => {
+    const i = Math.round(deck.scrollLeft / deck.clientWidth);
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+  });
+  function goCard(i) {
+    deck.scrollTo({ left: i * deck.clientWidth, behavior: 'smooth' });
+  }
+
+  // toast
+  let toastTimer = null;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1900);
+  }
+
+  // 付款动作
+  function pay(ch) {
+    const mask = document.getElementById('launchmask');
+    mask.style.setProperty('--spin', ch === 'wechat' ? '#07C160' : '#1677FF');
+    document.getElementById('launchtxt').textContent = ch === 'wechat' ? '正在调起微信' : '正在调起支付宝';
+    mask.classList.add('show');
+    setTimeout(() => {
+      mask.classList.remove('show');
+      toast(ch === 'wechat' ? '已直达微信收付款，出示付款码即可' : '已直达支付宝付款码');
+    }, 620);
+  }
+  function closeGuide() { document.getElementById('guide').classList.remove('show'); }
+
+  // 页面切换
+  function openSettings() { document.getElementById('settings').classList.add('show'); }
+  function closeSettings() { document.getElementById('settings').classList.remove('show'); }
+  function openCardGuide() { document.getElementById('cardguide').classList.add('show'); }
+  function closeCardGuide() { document.getElementById('cardguide').classList.remove('show'); }
+  function openScan() { document.getElementById('scan').classList.add('show'); }
+  function closeScan() { document.getElementById('scan').classList.remove('show'); }
+
+  // 默认渠道
+  let defaultCh = 'wechat';
+  function setDefault(ch) {
+    defaultCh = ch;
+    document.getElementById('opt-wechat').classList.toggle('on', ch === 'wechat');
+    document.getElementById('opt-alipay').classList.toggle('on', ch === 'alipay');
+    document.getElementById('badge-w').style.visibility = ch === 'wechat' ? 'visible' : 'hidden';
+    document.getElementById('badge-a').style.visibility = ch === 'alipay' ? 'visible' : 'hidden';
+    toast('已将「' + (ch === 'wechat' ? '微信' : '支付宝') + '」设为默认支付方式');
+  }
+
+  function toggleHaptic() {
+    document.getElementById('haptic').classList.toggle('on');
+  }
+
+  // 通过 URL hash 直接打开某一屏，便于分享与检查
+  window.addEventListener('load', () => {
+    const h = location.hash.replace('#', '');
+    if (h === 'settings') openSettings();
+    if (h === 'scan') openScan();
+    if (h === 'card') { openSettings(); openCardGuide(); }
+    if (h === 'guide') pay('wechat');
+    if (h === 'alipay') goCard(1);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "modelVersion": "6.0.0",
+  "description": "鸿蒙聚合支付 - 一键直达微信/支付宝付款码与扫码",
+  "dependencies": {},
+  "devDependencies": {}
+}

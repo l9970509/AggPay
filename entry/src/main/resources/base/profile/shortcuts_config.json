@@ -1,0 +1,52 @@
+{
+  "shortcuts": [
+    {
+      "shortcutId": "shortcut_wechat_code",
+      "label": "$string:shortcut_wechat_code",
+      "icon": "$media:ic_shortcut_wechat",
+      "wants": [
+        {
+          "bundleName": "com.aggpay.harmony",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "channel": "wechat",
+            "mode": "code"
+          }
+        }
+      ]
+    },
+    {
+      "shortcutId": "shortcut_alipay_code",
+      "label": "$string:shortcut_alipay_code",
+      "icon": "$media:ic_shortcut_alipay",
+      "wants": [
+        {
+          "bundleName": "com.aggpay.harmony",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "channel": "alipay",
+            "mode": "code"
+          }
+        }
+      ]
+    },
+    {
+      "shortcutId": "shortcut_scan",
+      "label": "$string:shortcut_scan",
+      "icon": "$media:ic_shortcut_scan",
+      "wants": [
+        {
+          "bundleName": "com.aggpay.harmony",
+          "moduleName": "entry",
+          "abilityName": "EntryAbility",
+          "parameters": {
+            "channel": "any",
+            "mode": "scan"
+          }
+        }
+      ]
+    }
+  ]
+}

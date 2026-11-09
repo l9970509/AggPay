@@ -1,0 +1,25 @@
+{
+  "forms": [
+    {
+      "name": "payWidget",
+      "displayName": "$string:form_display_name",
+      "description": "$string:form_desc",
+      "src": "./ets/widget/pages/PayWidget.ets",
+      "uiSyntax": "arkts",
+      "window": {
+        "designWidth": 720,
+        "autoDesignWidth": true
+      },
+      "colorMode": "auto",
+      "isDefault": true,
+      "updateEnabled": false,
+      "defaultDimension": "2*2",
+      "supportDimensions": [
+        "2*2",
+        "2*4",
+        "1*2"
+      ],
+      "formConfigAbility": "ability://EntryFormAbility"
+    }
+  ]
+}

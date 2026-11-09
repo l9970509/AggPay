@@ -1,0 +1,60 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#F5F6FA"
+    },
+    {
+      "name": "page_bg",
+      "value": "#F4F5F9"
+    },
+    {
+      "name": "card_bg",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "card_bg_sub",
+      "value": "#F7F8FC"
+    },
+    {
+      "name": "text_primary",
+      "value": "#14161A"
+    },
+    {
+      "name": "text_secondary",
+      "value": "#6B7280"
+    },
+    {
+      "name": "text_tertiary",
+      "value": "#9CA3AF"
+    },
+    {
+      "name": "divider",
+      "value": "#EDEFF4"
+    },
+    {
+      "name": "brand_wechat",
+      "value": "#07C160"
+    },
+    {
+      "name": "brand_wechat_deep",
+      "value": "#04964A"
+    },
+    {
+      "name": "brand_alipay",
+      "value": "#1677FF"
+    },
+    {
+      "name": "brand_alipay_deep",
+      "value": "#0B5BD3"
+    },
+    {
+      "name": "brand_accent",
+      "value": "#5B5BF7"
+    },
+    {
+      "name": "mask",
+      "value": "#CC000000"
+    }
+  ]
+}

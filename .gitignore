@@ -1,0 +1,28 @@
+# ---- HarmonyOS / DevEco ----
+/local.properties
+/.idea
+/.hvigor
+/.clangd
+/.clang-format
+/.clang-tidy
+/.appanalyzer
+/.cxx
+
+# ---- 构建产物 ----
+**/build
+**/oh_modules
+**/node_modules
+*.hap
+*.hsp
+*.app
+
+# ---- 签名材料（切勿提交）----
+*.p12
+*.cer
+*.p7b
+*.csr
+**/signature/
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db

@@ -1,0 +1,40 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "聚合支付主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "聚合支付"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "聚合支付"
+    },
+    {
+      "name": "form_label",
+      "value": "聚合支付卡片"
+    },
+    {
+      "name": "form_desc",
+      "value": "桌面一键直达付款码与扫码"
+    },
+    {
+      "name": "form_display_name",
+      "value": "聚合支付"
+    },
+    {
+      "name": "shortcut_wechat_code",
+      "value": "微信付款码"
+    },
+    {
+      "name": "shortcut_alipay_code",
+      "value": "支付宝付款码"
+    },
+    {
+      "name": "shortcut_scan",
+      "value": "扫一扫"
+    }
+  ]
+}
