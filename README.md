@@ -2,6 +2,8 @@
 
 鸿蒙（HarmonyOS 6.0 / API 26，即鸿蒙 7 代际）原生聚合支付快捷入口。参考魅族 Flyme 聚合支付的产品形态：**一屏聚合微信与支付宝，左右滑切换，点击直达付款码**，并提供桌面卡片与长按快捷方式。
 
+**安装包**：[Releases · v1.0.0](https://github.com/l9970509/AggPay/releases/tag/v1.0.0) → `AggPay-1.0.0-unsigned.hap`（457 KB，未签名，需签名后安装，或直接用 DevEco 编译运行，见 [1. 环境与构建](#1-环境与构建)）
+
 | 首页 | 设置 | 微信直达引导 |
 | --- | --- | --- |
 | ![首页](docs/screenshots/01-home.png) | ![设置](docs/screenshots/02-settings.png) | ![微信直达引导](docs/screenshots/03-wechat-guide.png) |
